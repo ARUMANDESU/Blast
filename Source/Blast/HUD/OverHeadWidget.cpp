@@ -3,6 +3,8 @@
 
 #include "OverHeadWidget.h"
 
+#include "GameFramework/GameStateBase.h"
+
 
 void UOverHeadWidget::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
 {
@@ -36,7 +38,6 @@ void UOverHeadWidget::ShowPlayerNetRole(APawn* InPawn)
 		Role = FString("None");
 		break;
 	}
-
 	FString RemoteRoleString = FString::Printf(TEXT("Remote Role : %s"), *Role);
 	SetDisplayText(RemoteRoleString);
 }

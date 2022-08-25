@@ -28,8 +28,8 @@ ABlastCharacter::ABlastCharacter()
 
 	CombatCom = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	CombatCom->SetIsReplicated(true);
-	//
-	// GetCharacterMovement()->NavAgentProps.bCanCrouch=true;
+	
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 }
 
 void ABlastCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -51,7 +51,7 @@ void ABlastCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	PlayerInputComponent->BindAction("Jump",IE_Pressed,this,&ACharacter::Jump);
+	PlayerInputComponent->BindAction("Jump",IE_Pressed,this,&ABlastCharacter::BlastJump);
 	
 	PlayerInputComponent->BindAxis("MoveForward",this,&ABlastCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight",this,&ABlastCharacter::MoveRight);
@@ -79,10 +79,7 @@ void ABlastCharacter::PostInitializeComponents()
 	{
 		 CombatCom->Character=this;
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("There is no Combat!"));   
-	}
+
 }
 
 
@@ -116,20 +113,30 @@ void ABlastCharacter::LookUp(float Value)
 	AddControllerPitchInput(Value);
 }
 
+void ABlastCharacter::BlastJump()
+{
+	if(bIsCrouched)
+	{
+		UnCrouch();
+	}
+	
+	FTimerHandle TimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, [&]{Jump();}, 0.01, false);
+
+	
+}
+
 void ABlastCharacter::EquipButtonPressed()
 {
-	UE_LOG(LogTemp, Warning, TEXT("combat"));
 	if(CombatCom)
 	{
 		
 		if(HasAuthority())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("pick up start Server"));
 			CombatCom->EquipWeapon(OverlappingWeapon);
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("pick up start Client"));
 			ServerEquipButtonPressed();
 		}
 		

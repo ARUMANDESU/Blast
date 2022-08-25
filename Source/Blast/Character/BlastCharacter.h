@@ -26,10 +26,12 @@ protected:
 	void MoveRight(float Value);
 	void Turn(float Value);
 	void LookUp(float Value);
+	void BlastJump();
 	void EquipButtonPressed();
 	void CrouchButtonPressed();
 	void AimButtonPressed();
 	void AimButtomReleased();
+	
 
 private:
 	UPROPERTY(VisibleAnywhere, Category=Camera)
