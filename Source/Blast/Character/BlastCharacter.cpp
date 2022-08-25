@@ -2,9 +2,13 @@
 
 #include "BlastCharacter.h"
 
+#include "Blast/BlastComponents/CombatComponent.h"
+#include "Blast/Weapon/Weapon.h"
 #include "Camera/CameraComponent.h"
+#include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Net/UnrealNetwork.h"
 
 ABlastCharacter::ABlastCharacter()
 {
@@ -19,14 +23,29 @@ ABlastCharacter::ABlastCharacter()
 	FollowCamera->SetupAttachment(CameraBoom,USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 	
-	
+	OverheadWidget = CreateDefaultSubobject<UWidgetComponent>("OverheadWidget");
+	OverheadWidget->SetupAttachment(RootComponent);
+
+	CombatCom = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
+	CombatCom->SetIsReplicated(true);
+	//
+	// GetCharacterMovement()->NavAgentProps.bCanCrouch=true;
 }
 
+void ABlastCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME_CONDITION(ABlastCharacter, OverlappingWeapon, COND_OwnerOnly);
+}
 
 void ABlastCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+}
+void ABlastCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
 }
 void ABlastCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -39,10 +58,33 @@ void ABlastCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	PlayerInputComponent->BindAxis("Turn",this,&ABlastCharacter::Turn);
 	PlayerInputComponent->BindAxis("LookUp",this,&ABlastCharacter::LookUp);
 
+	PlayerInputComponent->BindAction("Equip",IE_Pressed,this,&ABlastCharacter::EquipButtonPressed);
+	
+	PlayerInputComponent->BindAction("Crouch",IE_Pressed,this,&ABlastCharacter::CrouchButtonPressed);
+
+	PlayerInputComponent->BindAction("Aim",IE_Pressed,this,&ABlastCharacter::AimButtonPressed);
+	PlayerInputComponent->BindAction("Aim",IE_Released,this,&ABlastCharacter::AimButtomReleased);
+	
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement =true;
+
 	
 }
+
+void ABlastCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	if(CombatCom)
+	{
+		 CombatCom->Character=this;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("There is no Combat!"));   
+	}
+}
+
 
 void ABlastCharacter::MoveForward(float Value)
 {
@@ -74,11 +116,104 @@ void ABlastCharacter::LookUp(float Value)
 	AddControllerPitchInput(Value);
 }
 
-void ABlastCharacter::Tick(float DeltaTime)
+void ABlastCharacter::EquipButtonPressed()
 {
-	Super::Tick(DeltaTime);
-
+	UE_LOG(LogTemp, Warning, TEXT("combat"));
+	if(CombatCom)
+	{
+		
+		if(HasAuthority())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("pick up start Server"));
+			CombatCom->EquipWeapon(OverlappingWeapon);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("pick up start Client"));
+			ServerEquipButtonPressed();
+		}
+		
+	}
 }
+
+void ABlastCharacter::CrouchButtonPressed()
+{
+	if(bIsCrouched)
+	{
+		UnCrouch();
+	}
+	else
+	{
+		Crouch();	
+	}
+	
+}
+
+void ABlastCharacter::AimButtonPressed()
+{
+	if(CombatCom)
+	{
+		CombatCom->SetAiming(true);
+	}
+}
+
+void ABlastCharacter::AimButtomReleased()
+{
+	if(CombatCom)
+	{
+		CombatCom->SetAiming(false);
+	}
+}
+
+void ABlastCharacter::ServerEquipButtonPressed_Implementation()
+{
+	if(CombatCom)
+	{
+		CombatCom->EquipWeapon(OverlappingWeapon);
+	}
+}
+
+void ABlastCharacter::SetOverlapingWeapon(AWeapon* Weapon)
+{
+	if(OverlappingWeapon)
+	{
+		OverlappingWeapon->ShowPickUpWidget(false);
+	}
+	OverlappingWeapon = Weapon;
+	if(IsLocallyControlled())
+	{
+		if(OverlappingWeapon)
+		{
+			OverlappingWeapon->ShowPickUpWidget(true);
+		}
+	}
+}
+
+
+
+void ABlastCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
+{
+	if(OverlappingWeapon)
+	{
+		OverlappingWeapon->ShowPickUpWidget(true);
+	}
+	if(LastWeapon)
+	{
+		LastWeapon->ShowPickUpWidget(false);
+	}
+}
+
+
+bool ABlastCharacter::IsWeaponEquipped()
+{
+	return  (CombatCom && CombatCom->EquippedWeapon);
+}
+
+bool ABlastCharacter::IsAiming()
+{
+	return (CombatCom && CombatCom->bAiming);
+}
+
 
 
 
