@@ -29,6 +29,7 @@ void UBlastAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	
 	bIsInAir = BlastCharacter->GetCharacterMovement()->IsFalling();
 	bIsAccelerating = BlastCharacter->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0.f ? true : false;
+	
 	bWeaponEquipped = BlastCharacter->IsWeaponEquipped();
 	bIsCrouched = BlastCharacter->bIsCrouched;
 	
