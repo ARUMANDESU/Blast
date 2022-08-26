@@ -9,6 +9,7 @@
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 
 ABlastCharacter::ABlastCharacter()
@@ -50,6 +51,7 @@ void ABlastCharacter::BeginPlay()
 void ABlastCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	AimOffset(DeltaTime);
 }
 void ABlastCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -174,6 +176,31 @@ void ABlastCharacter::AimButtomReleased()
 	{
 		CombatCom->SetAiming(false);
 	}
+}
+
+void ABlastCharacter::AimOffset(float DeltaTime)
+{
+	if(CombatCom && CombatCom->EquippedWeapon==nullptr) return;
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.f;
+	float Speed = Velocity.Size();
+	bool bIsInAir = GetCharacterMovement()->IsFalling();
+	
+	if(Speed ==0.f && !bIsInAir)//Standing still, not jumping
+	{
+		FRotator CurrenAimRotation = FRotator(0.f,GetBaseAimRotation().Yaw,0.f);
+		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator( CurrenAimRotation, StartingAimRotation);
+		AO_Yaw = DeltaAimRotation.Yaw;
+		bUseControllerRotationYaw =false;
+	}
+	if(Speed >0.f || bIsInAir) // Running or jumping 
+	{
+		StartingAimRotation = FRotator(0.f,GetBaseAimRotation().Yaw,0.f);
+		AO_Yaw = 0.f;
+		bUseControllerRotationYaw =true;
+	}
+
+	AO_Pitch = GetBaseAimRotation().Pitch;
 }
 
 void ABlastCharacter::ServerEquipButtonPressed_Implementation()
