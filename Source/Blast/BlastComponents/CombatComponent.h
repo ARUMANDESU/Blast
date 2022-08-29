@@ -42,7 +42,10 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
 
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = true))
 	float BaseWalkSpeed;
+
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = true))
 	float AimWalkSpeed;
 
 	

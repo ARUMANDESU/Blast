@@ -4,21 +4,24 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Blast/BlasterTypes/TurningInPlace.h"
+
 #include "BlastCharacter.generated.h"
+
 
 UCLASS()
 class BLAST_API ABlastCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
-public: 
+public:
 	ABlastCharacter();
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	
+
 	virtual void PostInitializeComponents() override;
-	
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -32,12 +35,12 @@ protected:
 	void AimButtonPressed();
 	void AimButtomReleased();
 	void AimOffset(float DeltaTime);
-	
+
 
 private:
 	UPROPERTY(VisibleAnywhere, Category=Camera)
 	class USpringArmComponent* CameraBoom;
-	
+
 	UPROPERTY(VisibleAnywhere, Category=Camera)
 	class UCameraComponent* FollowCamera;
 
@@ -57,16 +60,22 @@ private:
 	void ServerEquipButtonPressed();
 
 	float AO_Yaw;
+	float InterpAO_Yaw;
 	float AO_Pitch;
 	FRotator StartingAimRotation;
-	
-public:	
+
+	ETurningInPlace TurningInPlace;
+
+	void TurnInPlace(float DeltaTime);
+
+public:
 	void SetOverlapingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
 	bool IsAiming();
 
-	FORCEINLINE float GetAO_Yaw() const {return AO_Yaw;}
-	FORCEINLINE float GetAO_Pitch() const {return AO_Pitch;}
+	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
+	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
+	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
 
-
+	AWeapon* GetEquippedWeapon();
 };

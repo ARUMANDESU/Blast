@@ -12,6 +12,7 @@ UCombatComponent::UCombatComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 	BaseWalkSpeed = 600.f;
 	AimWalkSpeed = 450.f;
+	
 }
 
 
@@ -70,7 +71,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 void UCombatComponent::EquipWeapon(class AWeapon* WeaponToEquip)
 {
-	if(Character == nullptr || WeaponToEquip == nullptr)return;
+	if(Character == nullptr || WeaponToEquip == nullptr || EquippedWeapon != nullptr )return;
 	
 	EquippedWeapon = WeaponToEquip;
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);

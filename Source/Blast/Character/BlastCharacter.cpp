@@ -1,7 +1,4 @@
 
-
-#include "BlastCharacter.h"
-
 #include "Blast/BlastComponents/CombatComponent.h"
 #include "Blast/Weapon/Weapon.h"
 #include "Camera/CameraComponent.h"
@@ -11,6 +8,11 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
+#include "Math/UnrealMathUtility.h"
+
+#include "BlastCharacter.h"
+
+
 
 ABlastCharacter::ABlastCharacter()
 {
@@ -35,6 +37,12 @@ ABlastCharacter::ABlastCharacter()
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	GetCharacterMovement()->RotationRate = FRotator(0.f, 0.f, 850.f);
+
+	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+
+	NetUpdateFrequency = 66.f;
+	MinNetUpdateFrequency =33.f;
 }
 
 void ABlastCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -51,7 +59,9 @@ void ABlastCharacter::BeginPlay()
 void ABlastCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
 	AimOffset(DeltaTime);
+	
 }
 void ABlastCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -191,16 +201,56 @@ void ABlastCharacter::AimOffset(float DeltaTime)
 		FRotator CurrenAimRotation = FRotator(0.f,GetBaseAimRotation().Yaw,0.f);
 		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator( CurrenAimRotation, StartingAimRotation);
 		AO_Yaw = DeltaAimRotation.Yaw;
-		bUseControllerRotationYaw =false;
+		if(TurningInPlace == ETurningInPlace::ETIP_NotTurning)
+		{
+			InterpAO_Yaw = AO_Yaw;
+		}
+		
+		bUseControllerRotationYaw =true;
+		TurnInPlace(DeltaTime);
+		
 	}
 	if(Speed >0.f || bIsInAir) // Running or jumping 
 	{
 		StartingAimRotation = FRotator(0.f,GetBaseAimRotation().Yaw,0.f);
 		AO_Yaw = 0.f;
 		bUseControllerRotationYaw =true;
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	}
 
 	AO_Pitch = GetBaseAimRotation().Pitch;
+	
+	if(AO_Pitch > 90.f && !IsLocallyControlled())
+	{
+	// map pitch from the [270, 360) to [-90, 0)
+		FVector2d InRange(270.f, 360.f);
+		FVector2d OutRange(-90.f, 0.f);
+		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
+		
+	}
+}
+
+void ABlastCharacter::TurnInPlace(float DeltaTime)
+{
+	if(AO_Yaw > 90.f)
+	{
+		TurningInPlace = ETurningInPlace::ETIP_Right;
+	}
+	else if(AO_Yaw < -90.f)
+	{
+		TurningInPlace = ETurningInPlace::ETIP_Left;
+	}
+
+	if(TurningInPlace != ETurningInPlace::ETIP_NotTurning)
+	{
+		InterpAO_Yaw = FMath::FInterpTo(InterpAO_Yaw, 0.f, DeltaTime, 4.f);
+		AO_Yaw = InterpAO_Yaw;
+		if(FMath::Abs(AO_Yaw)<15.f)
+		{
+			TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+			StartingAimRotation = FRotator(0.f,GetBaseAimRotation().Yaw,0.f);
+		}
+	}
 }
 
 void ABlastCharacter::ServerEquipButtonPressed_Implementation()
@@ -211,6 +261,9 @@ void ABlastCharacter::ServerEquipButtonPressed_Implementation()
 		CombatCom->EquipWeapon(OverlappingWeapon);
 	}
 }
+
+
+
 
 void ABlastCharacter::SetOverlapingWeapon(AWeapon* Weapon)
 {
@@ -251,6 +304,12 @@ bool ABlastCharacter::IsWeaponEquipped()
 bool ABlastCharacter::IsAiming()
 {
 	return (CombatCom && CombatCom->bAiming);
+}
+
+AWeapon* ABlastCharacter::GetEquippedWeapon()
+{
+	if(CombatCom ==nullptr) return nullptr;
+	return CombatCom->EquippedWeapon;
 }
 
 

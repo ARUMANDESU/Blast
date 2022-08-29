@@ -4,6 +4,7 @@
 #include "BlastAnimInstance.h"
 
 #include "BlastCharacter.h"
+#include "Blast/Weapon/Weapon.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -31,8 +32,9 @@ void UBlastAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsAccelerating = BlastCharacter->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0.f ? true : false;
 	
 	bWeaponEquipped = BlastCharacter->IsWeaponEquipped();
+	EquippedWeapon = BlastCharacter->GetEquippedWeapon();
 	bIsCrouched = BlastCharacter->bIsCrouched;
-	
+	TurningInPlace = BlastCharacter->GetTurningInPlace();
 	bAiming = BlastCharacter->IsAiming();
 
 	//Offset Yaw for Strafing
@@ -51,4 +53,15 @@ void UBlastAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	AO_Yaw = BlastCharacter->GetAO_Yaw();
 	AO_Pitch = BlastCharacter->GetAO_Pitch();
+
+	if(bWeaponEquipped && EquippedWeapon && EquippedWeapon->GetWeqponMesh() && BlastCharacter->GetMesh())
+	{
+		LeftHandTransform = EquippedWeapon->GetWeqponMesh()->GetSocketTransform(FName("LeftHandSocket"), ERelativeTransformSpace::RTS_World);
+
+		FVector OutPosition;
+		FRotator OutRotation;
+		BlastCharacter->GetMesh()->TransformToBoneSpace(FName("hand_r"), LeftHandTransform.GetLocation(), FRotator::ZeroRotator, OutPosition, OutRotation );
+		LeftHandTransform.SetLocation(OutPosition);
+		LeftHandTransform.SetRotation(FQuat(OutRotation));
+	}
 }
