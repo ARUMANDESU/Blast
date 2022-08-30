@@ -54,9 +54,9 @@ void UBlastAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	AO_Yaw = BlastCharacter->GetAO_Yaw();
 	AO_Pitch = BlastCharacter->GetAO_Pitch();
 
-	if(bWeaponEquipped && EquippedWeapon && EquippedWeapon->GetWeqponMesh() && BlastCharacter->GetMesh())
+	if(bWeaponEquipped && EquippedWeapon && EquippedWeapon->GetWeaponMesh() && BlastCharacter->GetMesh())
 	{
-		LeftHandTransform = EquippedWeapon->GetWeqponMesh()->GetSocketTransform(FName("LeftHandSocket"), ERelativeTransformSpace::RTS_World);
+		LeftHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("LeftHandSocket"), ERelativeTransformSpace::RTS_World);
 
 		FVector OutPosition;
 		FRotator OutRotation;

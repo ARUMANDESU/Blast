@@ -82,6 +82,18 @@ void AWeapon::OnRep_WeaponState()
 	case EWeaponState::EWS_Equipped:
 		ShowPickUpWidget(false);
 		break;
+	case EWeaponState::EWS_Dropped:
+		ShowPickUpWidget(true);
+		break;
+	case EWeaponState::EWS_Initial:
+		ShowPickUpWidget(true);
+		break;
+	case EWeaponState::EWS_MAX:
+		ShowPickUpWidget(true);
+		break;
+		
+	default:
+		break;
 	}
 }
 
@@ -97,7 +109,7 @@ void AWeapon::SetWeaponState(EWeaponState State)
 	}
 }
 
-void AWeapon::Fire()
+void AWeapon::Fire(const FVector& HitTarget)
 {
 	if(FireAnimation)
 	{

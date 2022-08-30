@@ -39,6 +39,7 @@ protected:
 	void AimOffset(float DeltaTime);
 	void FireButtonPressed();
 	void FireButtonReleased();
+	void CameraButtonPressed();
 
 
 private:

@@ -25,7 +25,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void ShowPickUpWidget(bool bShowWidget);
-	
+	virtual  void Fire(const FVector& HitTarget);
 protected:
 
 	virtual void BeginPlay() override;
@@ -70,7 +70,7 @@ public:
 	
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetAreaSphere() const {return AreaSphere;}
-	FORCEINLINE USkeletalMeshComponent* GetWeqponMesh() const {return WeaponMesh; }
-	void Fire();
+	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const {return WeaponMesh; }
+	
 
 };
