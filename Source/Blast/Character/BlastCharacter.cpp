@@ -80,6 +80,11 @@ void ABlastCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 	PlayerInputComponent->BindAction("Aim",IE_Pressed,this,&ABlastCharacter::AimButtonPressed);
 	PlayerInputComponent->BindAction("Aim",IE_Released,this,&ABlastCharacter::AimButtomReleased);
+
+	PlayerInputComponent->BindAction("Fire",IE_Pressed,this,&ABlastCharacter::FireButtonPressed);
+	PlayerInputComponent->BindAction("Fire",IE_Released,this,&ABlastCharacter::FireButtonReleased);
+
+	
 	
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement =true;
@@ -96,6 +101,20 @@ void ABlastCharacter::PostInitializeComponents()
 		 CombatCom->Character=this;
 	}
 
+}
+
+void ABlastCharacter::PlayFireMontage(bool bAiming)
+{
+	if(CombatCom == nullptr || CombatCom->EquippedWeapon == nullptr) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if(AnimInstance && FireWeaponMontage)
+	{
+		AnimInstance->Montage_Play(FireWeaponMontage);
+		FName SectionName;
+		SectionName =bAiming ? FName("RifleAim") : FName("RifleHip") ;
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
 }
 
 
@@ -227,6 +246,22 @@ void ABlastCharacter::AimOffset(float DeltaTime)
 		FVector2d OutRange(-90.f, 0.f);
 		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
 		
+	}
+}
+
+void ABlastCharacter::FireButtonPressed()
+{
+	if(CombatCom)
+	{
+		CombatCom->FireButtonPressed(true);
+	}
+}
+
+void ABlastCharacter::FireButtonReleased()
+{
+	if(CombatCom)
+	{
+		CombatCom->FireButtonPressed(false);
 	}
 }
 
