@@ -76,6 +76,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* FireWeaponMontage;
 
+	UPROPERTY(EditAnywhere)
+	float CameraBoomSocketOffsetY;
+
 public:
 	void SetOverlapingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();

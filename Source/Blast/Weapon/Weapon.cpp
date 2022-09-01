@@ -2,10 +2,12 @@
 
 #include "Weapon.h"
 
+#include "Casing.h"
 #include "Blast/Character/BlastCharacter.h"
 #include "Components/SphereComponent.h"
 #include "Components/SphereReflectionCaptureComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Engine/SkeletalMeshSocket.h"
 #include "Net/UnrealNetwork.h"
 
 AWeapon::AWeapon()
@@ -114,6 +116,25 @@ void AWeapon::Fire(const FVector& HitTarget)
 	if(FireAnimation)
 	{
 		WeaponMesh->PlayAnimation(FireAnimation, false);
+	}
+	if(CasingClass)
+	{
+		const USkeletalMeshSocket* AmmoEjectSocket =  WeaponMesh->GetSocketByName(FName("AmmoEject"));
+	
+		if(AmmoEjectSocket)
+		{
+			FTransform SocketTransform = AmmoEjectSocket->GetSocketTransform(WeaponMesh);
+
+			UWorld* World = GetWorld();
+			if(World)
+			{
+				World->SpawnActor<ACasing>(
+					CasingClass,
+					SocketTransform.GetLocation(),
+					SocketTransform.GetRotation().Rotator()
+				);
+			}
+		}
 	}
 }
 

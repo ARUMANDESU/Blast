@@ -43,7 +43,7 @@ ABlastCharacter::ABlastCharacter()
 
 	NetUpdateFrequency = 66.f;
 	MinNetUpdateFrequency =33.f;
-	CameraBoom->SocketOffset.Y= 120.f;
+	CameraBoomSocketOffsetY= 120.f;
 }
 
 void ABlastCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -270,8 +270,9 @@ void ABlastCharacter::CameraButtonPressed()
 {
 	if(CameraBoom)
 	{
-		CameraBoom->SocketOffset.Y = CameraBoom->SocketOffset.Y == 120.f? -120.f : 120.f;
+		CameraBoom->SocketOffset.Y = CameraBoom->SocketOffset.Y == CameraBoomSocketOffsetY? (-1)*CameraBoomSocketOffsetY : CameraBoomSocketOffsetY;
 	}
+	
 }
 
 void ABlastCharacter::TurnInPlace(float DeltaTime)
@@ -355,7 +356,6 @@ AWeapon* ABlastCharacter::GetEquippedWeapon()
 	if(CombatCom ==nullptr) return nullptr;
 	return CombatCom->EquippedWeapon;
 }
-
 
 
 

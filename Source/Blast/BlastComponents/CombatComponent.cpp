@@ -39,8 +39,7 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	FHitResult HitResult;
-	TraceUnderCrosshairs(HitResult);
+
 }
 
 
@@ -96,32 +95,17 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 	if(bScreenToWorld)
 	{
 		FVector Start = CrosshairWorldPosition;
+		UE_LOG(LogTemp, Warning, TEXT("Start : %g, %g, %g"), Start.X ,Start.Y ,Start.Z);
 
 		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
-
+		UE_LOG(LogTemp, Warning, TEXT("End : %g, %g, %g"), End.X ,End.Y ,End.Z);
+		UE_LOG(LogTemp, Warning, TEXT("CrosshairWorldDirection : %g, %g, %g"), CrosshairWorldDirection.X ,CrosshairWorldDirection.Y ,CrosshairWorldDirection.Z);
 		GetWorld()->LineTraceSingleByChannel(
 			TraceHitResult,
 			Start,
 			End,
 			ECollisionChannel::ECC_Visibility
 			);
-
-		if(!TraceHitResult.bBlockingHit)
-		{
-			TraceHitResult.ImpactPoint =End;
-			HitTarget = End;
-		}
-		else
-		{
-			HitTarget = TraceHitResult.ImpactPoint;
-			DrawDebugSphere(
-				GetWorld(),
-				TraceHitResult.ImpactPoint,
-				12.f,
-				12,
-				FColor::Red
-				);
-		}
 	}
 }
 
@@ -131,22 +115,24 @@ void UCombatComponent::FireButtonPressed(bool bPressed)
 	
 	if(bFireButtonPressed)
 	{
-		ServerFire();
+		FHitResult HitResult;
+		TraceUnderCrosshairs(HitResult);
+		ServerFire(HitResult.ImpactPoint);
 	}
 
 }
-void UCombatComponent::ServerFire_Implementation()
+void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
-	MulticastFire();
+	MulticastFire(TraceHitTarget);
 }
 
-void UCombatComponent::MulticastFire_Implementation()
+void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
 	if(EquippedWeapon ==nullptr) return;
 	if(Character)
 	{
 		Character->PlayFireMontage(bAiming);
-		EquippedWeapon ->Fire(HitTarget);
+		EquippedWeapon ->Fire(TraceHitTarget);
 	}
 }
 
