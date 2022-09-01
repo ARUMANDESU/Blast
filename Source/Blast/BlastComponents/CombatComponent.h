@@ -44,11 +44,14 @@ protected:
 
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
+	void SetHUDCrosshairs(float DeltaTime);
 private:
 	UPROPERTY(Replicated)
 	bool bAiming;
 	
 	class ABlastCharacter* Character;
+	class ABlastPlayerController* Controller;
+	class ABlastHUD* HUD;
 	
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
@@ -61,7 +64,11 @@ private:
 
 	bool bFireButtonPressed;
 
-	
+	/*
+	 * HUD and Crosshairs
+	 */
+	float CrosshairVelocityFactor;
+	float CrosshairInAirFactor;
 public:	
 	
 
