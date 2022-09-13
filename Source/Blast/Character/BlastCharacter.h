@@ -5,12 +5,13 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Blast/BlasterTypes/TurningInPlace.h"
+#include "Blast/Interfaces/InteractWithCrosshairsInterface.h"
 
 #include "BlastCharacter.generated.h"
 
 
 UCLASS()
-class BLAST_API ABlastCharacter : public ACharacter
+class BLAST_API ABlastCharacter : public ACharacter, public IInteractWithCrosshairsInterface
 {
 	GENERATED_BODY()
 
@@ -21,9 +22,11 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	virtual void PostInitializeComponents() override;
-
 	void PlayFireMontage(bool bAiming);
-
+	
+	UFUNCTION(NetMulticast , Unreliable)
+	void MulticastHit();
+	
 protected:
 	virtual void BeginPlay() override;
 
@@ -40,7 +43,9 @@ protected:
 	void FireButtonPressed();
 	void FireButtonReleased();
 	void CameraButtonPressed();
-
+	void PlayHitReactMontage();
+	
+	
 
 private:
 	UPROPERTY(VisibleAnywhere, Category=Camera)
@@ -75,9 +80,18 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* FireWeaponMontage;
+	
+	UPROPERTY(EditAnywhere, Category = Combat)
+	class UAnimMontage* HitReactMontage;
 
+	
 	UPROPERTY(EditAnywhere)
 	float CameraBoomSocketOffsetY;
+
+	void HideCameraIfCharacterClose();
+
+	UPROPERTY(EditAnywhere)
+	float CameraThreshold = 200.f;
 
 public:
 	void SetOverlapingWeapon(AWeapon* Weapon);
@@ -89,4 +103,7 @@ public:
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
 
 	AWeapon* GetEquippedWeapon();
+
+	FVector GetHitTarget() const;
+	FORCEINLINE UCameraComponent* GetFollowCamera()const {return FollowCamera;}
 };
